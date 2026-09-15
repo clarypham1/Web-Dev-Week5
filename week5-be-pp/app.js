@@ -1,13 +1,18 @@
 require('dotenv').config();
 require('dotenv').config();
 const express = require("express");
-const app = express();
+const connectDB = require('./config/db');
+
+const app = express(); 
+connectDB();  
+
 const tourRouter = require("./routes/tourRouter");
 const userRouter = require("./routes/userRouter");
 const { unknownEndpoint } = require("./middleware/customMiddleware");
 
 const morgan = require("morgan");
 app.use(morgan("dev"));
+
 
 // Middleware to parse JSON
 app.use(express.json());
