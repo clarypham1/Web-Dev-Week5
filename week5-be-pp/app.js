@@ -2,13 +2,13 @@ require('dotenv').config();
 require('dotenv').config();
 const express = require("express");
 const connectDB = require('./config/db');
-
+const { unknownEndpoint, errorHandler } = require('./middleware/customMiddleware');
 const app = express(); 
 connectDB();  
 
 const tourRouter = require("./routes/tourRouter");
 const userRouter = require("./routes/userRouter");
-const { unknownEndpoint } = require("./middleware/customMiddleware");
+
 
 const morgan = require("morgan");
 app.use(morgan("dev"));
@@ -29,7 +29,8 @@ app.use("/api/tours", tourRouter);
 app.use("/api/users", userRouter);
 
 app.use(unknownEndpoint);
-// app.use(errorHandler);
+app.use(errorHandler);
+
 
 const port = process.env.PORT || 4000;
 // Start the server
