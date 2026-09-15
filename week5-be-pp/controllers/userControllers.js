@@ -1,76 +1,120 @@
-const User = require("../models/userModel");
+const mongoose = require('mongoose');
+const User = require('../models/userModel');
 
-// GET /users
-const getAllUsers = (req, res) => {
-  const users = User.getAll();
-  res.json(users);
+// GET all users
+const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find().sort({ createdAt: -1 });
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
-// POST /users
-const createUser = (req, res) => {
-  const { email } = req.body;
-  const existingUser = User.getAll().find((user) => user.email === email);
-  if (existingUser) {
-    return res.status(400).json({ message: "Failed to create user" });
-  }
-  const newUser = User.addOne({ ...req.body }); // Spread the req.body object
+// POST create user
+const createUser = async (req, res) => {
+  try {
+    const {
+      name,
+      email,
+      password,
+      phone_number,
+      gender,
+      date_of_birth,
+      membership_status,
+      account_verified,
+      company,
+    } = req.body;
 
-  if (newUser) {
+    const newUser = await User.create({
+      name,
+      email,
+      password,
+      phone_number,
+      gender,
+      date_of_birth,
+      membership_status,
+      account_verified,
+      company,
+    });
+
     res.status(201).json(newUser);
-  } else {
-    // Handle error (e.g., failed to create user)
-    res.status(400).json({ message: "Invalid user data. Ensure all fields are provided, including 'account_verified' and 'company'." });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
   }
 };
- 
-// GET /users/:userId
-const getUserById = (req, res) => {
-  const userId = req.params.userId;
-  const user = User.findById(userId);
-  if (user) {
+
+// GET user by ID
+const getUserById = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: 'Invalid user ID format' });
+    }
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
     res.json(user);
-  } else {
-    res.status(404).json({ message: "User not found" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
 
-// PUT /users/:userId
-const updateUser = (req, res) => {
-  const userId = req.params.userId;
-  if (isNaN(userId)) {
-    return res.status(400).json({ message: "Invalid user ID" });
-  }
-  const updatedUser = User.updateOneById(userId, { ...req.body }); // Spread the req.body object
+// PUT update user
+const updateUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
 
-  if (updatedUser) {
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: 'Invalid user ID format' });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      req.body,
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
     res.json(updatedUser);
-  } else {
-    // Handle update failure (e.g., user not found)
-    res.status(404).json({ message: "User not found" });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
   }
 };
 
-// DELETE /users/:userId
-const deleteUser = (req, res) => {
-  const userId = req.params.userId;
-  if (isNaN(userId)) {
-    return res.status(400).json({ message: "Invalid user ID" });
-  }
-  const isDeleted = User.deleteOneById(userId);
+// DELETE user
+const deleteUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
 
-  if (isDeleted) {
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: 'Invalid user ID format' });
+    }
+
+    const deletedUser = await User.findByIdAndDelete(userId);
+
+    if (!deletedUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
     res.status(204).send();
-  } else {
-    // Handle deletion failure (e.g., user not found)
-    res.status(404).json({ message: "User not found" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
 
 module.exports = {
   getAllUsers,
-  getUserById,
   createUser,
+  getUserById,
   updateUser,
   deleteUser,
 };
-
