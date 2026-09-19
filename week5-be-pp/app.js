@@ -10,7 +10,7 @@ const tourRouter = require("./routes/tourRouter");
 const userRouter = require("./routes/userRouter");
 
 
-const morgan = require("morgan");
+const morgan = require("morgan")
 app.use(morgan("dev"));
 
 
